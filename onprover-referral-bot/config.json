@@ -1,11 +1,12 @@
 {
     "headless": false,
     "account_count": 3,
-    "min_delay": 5,
-    "max_delay": 10,
+    "min_delay": 10,
+    "max_delay": 20,
     "password": "YourSecurePassword123!",
     "referral_code": "YOUR_REFERRAL_CODE",
     "use_temp_email": true,
     "email_prefix": "user",
-    "email_domain": "example.com"
+    "email_domain": "example.com",
+    "pause_on_failure": true
 }
