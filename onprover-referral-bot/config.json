@@ -1,0 +1,12 @@
+{
+    "headless": false,
+    "chromedriver_path": "chromedriver.exe",
+    "referral_code": "KODE_REFERRAL_ANDA",
+    "account_count": 3,
+    "min_delay": 3,
+    "max_delay": 7,
+    "password": "Password123!",
+    "use_temp_email": true,
+    "email_prefix": "user",
+    "email_domain": "gmail.com"
+}
