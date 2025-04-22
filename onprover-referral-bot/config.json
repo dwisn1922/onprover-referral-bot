@@ -1,7 +1,7 @@
 {
     "headless": true,
     "chromedriver_path": "/usr/local/bin/chromedriver",
-    "referral_code": "KODE_REFERRAL_ANDA",
+    "referral_code": "q1o1_tyok1922",
     "account_count": 3,
     "min_delay": 3,
     "max_delay": 7,
