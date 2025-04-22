@@ -7,6 +7,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class OnproverReferralBot:
     def __init__(self, config):
@@ -19,14 +21,14 @@ class OnproverReferralBot:
             chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("--disable-popup-blocking")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         
-        # Gunakan ChromeDriverManager untuk mengelola versi driver
+        # Use ChromeDriverManager
         service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(
-            service=service,
-            options=chrome_options
-        )
-        return driver  # Fixed this line - was returning 'drive' instead of 'driver'
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.implicitly_wait(10)  # seconds
+        return driver
     
     def generate_email(self, index):
         if self.config['use_temp_email']:
@@ -37,31 +39,47 @@ class OnproverReferralBot:
     def register_account(self, email):
         try:
             self.driver.get("https://onprover.orochi.network/register")
-            time.sleep(random.uniform(2, 4))
             
-            # Isi form pendaftaran
-            self.driver.find_element(By.NAME, "email").send_keys(email)
-            self.driver.find_element(By.NAME, "password").send_keys(self.config['password'])
-            self.driver.find_element(By.NAME, "referral_code").send_keys(self.config['referral_code'])
+            # Wait for elements to be present
+            wait = WebDriverWait(self.driver, 15)
             
-            # Handle terms and conditions jika ada
+            # Find elements using more robust selectors
+            email_field = wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[name='email'], input[type='email']")
+            ))
+            password_field = wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[name='password'], input[type='password']")
+            ))
+            referral_field = wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[name='referral_code']")
+            ))
+            
+            # Fill the form
+            email_field.send_keys(email)
+            password_field.send_keys(self.config['password'])
+            referral_field.send_keys(self.config['referral_code'])
+            
+            # Handle terms checkbox if exists
             try:
-                terms_checkbox = self.driver.find_element(By.XPATH, "//input[@type='checkbox' and contains(@name, 'terms')]")
+                terms_checkbox = self.driver.find_element(
+                    By.CSS_SELECTOR, "input[type='checkbox'][name*='terms']"
+                )
                 terms_checkbox.click()
             except NoSuchElementException:
                 pass
             
             # Submit form
-            submit_button = self.driver.find_element(By.XPATH, "//button[@type='submit']")
+            submit_button = wait.until(EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "button[type='submit']")
+            ))
             submit_button.click()
-            time.sleep(random.uniform(3, 6))
             
-            # Verifikasi pendaftaran berhasil
+            # Wait for success or timeout
             try:
-                success_element = self.driver.find_element(By.XPATH, "//*[contains(text(), 'success') or contains(text(), 'Success')]")
+                wait.until(EC.url_contains("success") | EC.url_contains("dashboard"))
                 print(f"[SUCCESS] Akun {email} berhasil didaftarkan!")
                 return True
-            except NoSuchElementException:
+            except:
                 print(f"[WARNING] Pendaftaran {email} mungkin gagal, verifikasi manual diperlukan")
                 return False
                 
@@ -81,11 +99,11 @@ class OnproverReferralBot:
         self.driver.quit()
 
 if __name__ == "__main__":
-    # Load konfigurasi
+    # Load configuration
     with open('config.json') as config_file:
         config = json.load(config_file)
     
-    # Jalankan bot
+    # Run bot
     bot = OnproverReferralBot(config)
     bot.run()
     
