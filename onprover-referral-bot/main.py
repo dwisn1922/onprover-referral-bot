@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 
 class OnproverReferralBot:
@@ -19,13 +20,13 @@ class OnproverReferralBot:
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("--disable-popup-blocking")
         
-        # Untuk Selenium versi terbaru
-        service = Service(executable_path=self.config['chromedriver_path'])
+        # Gunakan ChromeDriverManager untuk mengelola versi driver
+        service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(
             service=service,
             options=chrome_options
         )
-        return driver
+        return drive
     
     def generate_email(self, index):
         if self.config['use_temp_email']:
