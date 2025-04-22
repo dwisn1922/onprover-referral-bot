@@ -30,13 +30,13 @@ class OnproverReferralBot:
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("--disable-popup-blocking")
         
-        # Set explicit path to Chrome binary
+        # Explicit paths
         chrome_options.binary_location = "/usr/bin/google-chrome"
         
         try:
-            service = Service(executable_path="/usr/local/bin/chromedriver")
+            service = Service(executable_path="/usr/bin/chromedriver")
             driver = webdriver.Chrome(service=service, options=chrome_options)
-            driver.implicitly_wait(10)
+            driver.implicitly_wait(15)
             return driver
         except WebDriverException as e:
             print(f"[DRIVER ERROR] ChromeDriver issue: {str(e)}")
@@ -52,58 +52,61 @@ class OnproverReferralBot:
             print(f"Navigating to registration page...")
             self.driver.get("https://onprover.orochi.network/register")
             
-            # Wait for page to load
-            WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            # Wait for page to load completely
+            WebDriverWait(self.driver, 30).until(
+                lambda d: d.execute_script("return document.readyState") == "complete")
+            
+            print("Taking screenshot of page...")
+            self.driver.save_screenshot("registration_page.png")
             
             print("Locating form elements...")
-            # Try multiple possible selectors for each field
-            email_field = WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, "//input[@type='email' or @name='email']"))
+            # More robust element finding with multiple fallbacks
+            email_field = WebDriverWait(self.driver, 30).until(
+                EC.presence_of_element_located((By.XPATH, 
+                "//input[@type='email']|//input[@name='email']|//input[contains(@id,'email')]")))
             
-            password_field = WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, "//input[@type='password' or @name='password']"))
+            password_field = WebDriverWait(self.driver, 30).until(
+                EC.presence_of_element_located((By.XPATH,
+                "//input[@type='password']|//input[@name='password']|//input[contains(@id,'password')]")))
             
-            referral_field = WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, "//input[@name='referral_code' or contains(@id,'referral')]"))
+            referral_field = WebDriverWait(self.driver, 30).until(
+                EC.presence_of_element_located((By.XPATH,
+                "//input[@name='referral_code']|//input[contains(@id,'referral')]")))
             
             print("Filling form...")
-            email_field.clear()
-            email_field.send_keys(email)
+            self.driver.execute_script("arguments[0].value = arguments[1]", email_field, email)
+            self.driver.execute_script("arguments[0].value = arguments[1]", password_field, self.config['password'])
+            self.driver.execute_script("arguments[0].value = arguments[1]", referral_field, self.config['referral_code'])
             
-            password_field.clear()
-            password_field.send_keys(self.config['password'])
-            
-            referral_field.clear()
-            referral_field.send_keys(self.config['referral_code'])
-            
-            # Handle terms checkbox if exists
+            # Check for CAPTCHA
             try:
-                terms_checkbox = self.driver.find_element(
-                    By.XPATH, "//input[@type='checkbox' and contains(@name, 'terms')]")
-                if not terms_checkbox.is_selected():
-                    terms_checkbox.click()
+                iframe = self.driver.find_element(By.XPATH, "//iframe[contains(@src,'recaptcha')]")
+                print("[WARNING] CAPTCHA detected - manual intervention required")
+                input("Please solve the CAPTCHA and press Enter to continue...")
             except NoSuchElementException:
                 pass
-            
+                
             # Submit form
-            submit_button = WebDriverWait(self.driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
+            submit_button = WebDriverWait(self.driver, 30).until(
+                EC.element_to_be_clickable((By.XPATH,
+                "//button[@type='submit']|//input[@type='submit']")))
             submit_button.click()
             
             # Verify success
             try:
-                WebDriverWait(self.driver, 20).until(
-                    lambda d: "success" in d.current_url.lower() or "dashboard" in d.current_url.lower())
+                WebDriverWait(self.driver, 30).until(
+                    lambda d: "success" in d.current_url.lower() or 
+                             "dashboard" in d.current_url.lower() or
+                             "welcome" in d.current_url.lower())
                 print(f"[SUCCESS] Account {email} registered successfully!")
                 return True
             except:
                 print(f"[WARNING] Registration may have failed for {email}")
+                self.driver.save_screenshot(f"error_{email}.png")
                 return False
                 
         except Exception as e:
             print(f"[ERROR] Failed to register {email}: {str(e)}")
-            # Take screenshot for debugging
             self.driver.save_screenshot(f"error_{email}.png")
             return False
 
@@ -112,8 +115,11 @@ class OnproverReferralBot:
         for i in range(1, self.config['account_count'] + 1):
             email = self.generate_email(i)
             print(f"\nRegistering account {i}/{self.config['account_count']} with email: {email}")
-            self.register_account(email)
+            success = self.register_account(email)
             time.sleep(random.uniform(self.config['min_delay'], self.config['max_delay']))
+            
+            if not success and self.config['pause_on_failure']:
+                input("Press Enter to continue after fixing the issue...")
         
         print("\nReferral process completed!")
         self.driver.quit()
