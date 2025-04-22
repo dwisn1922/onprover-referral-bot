@@ -1,12 +1,11 @@
 {
-    "headless": true,
-    "chromedriver_path": "/usr/local/bin/chromedriver",
-    "referral_code": "q1o1_tyok1922",
+    "headless": false,
     "account_count": 3,
-    "min_delay": 3,
-    "max_delay": 7,
-    "password": "Password123!",
+    "min_delay": 5,
+    "max_delay": 10,
+    "password": "YourSecurePassword123!",
+    "referral_code": "YOUR_REFERRAL_CODE",
     "use_temp_email": true,
     "email_prefix": "user",
-    "email_domain": "gmail.com"
+    "email_domain": "example.com"
 }
