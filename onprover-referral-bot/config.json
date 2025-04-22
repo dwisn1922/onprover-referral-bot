@@ -1,6 +1,6 @@
 {
-    "headless": false,
-    "chromedriver_path": "chromedriver.exe",
+    "headless": true,
+    "chromedriver_path": "/usr/local/bin/chromedriver",
     "referral_code": "KODE_REFERRAL_ANDA",
     "account_count": 3,
     "min_delay": 3,
