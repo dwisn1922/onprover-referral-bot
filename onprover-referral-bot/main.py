@@ -7,10 +7,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-import os
 
 class OnproverReferralBot:
     def __init__(self, config):
@@ -30,7 +26,7 @@ class OnproverReferralBot:
             service=service,
             options=chrome_options
         )
-        return drive
+        return driver  # Fixed this line - was returning 'drive' instead of 'driver'
     
     def generate_email(self, index):
         if self.config['use_temp_email']:
