@@ -12,16 +12,19 @@ class OnproverReferralBot:
         self.driver = self.setup_driver()
         
     def setup_driver(self):
-        chrome_options = Options()
-        if self.config['headless']:
-            chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-notifications")
-        chrome_options.add_argument("--disable-popup-blocking")
-        driver = webdriver.Chrome(
-            executable_path=self.config['chromedriver_path'],
-            options=chrome_options
-        )
-        return driver
+    chrome_options = Options()
+    if self.config['headless']:
+        chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-notifications")
+    chrome_options.add_argument("--disable-popup-blocking")
+    
+    # Untuk Selenium 4.6+ tidak perlu executable_path
+    service = webdriver.ChromeService()
+    driver = webdriver.Chrome(
+        service=service,
+        options=chrome_options
+    )
+    return driver
     
     def generate_email(self, index):
         if self.config['use_temp_email']:
