@@ -7,6 +7,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+import os
 
 class OnproverReferralBot:
     def __init__(self, config):
@@ -88,3 +92,16 @@ if __name__ == "__main__":
     # Jalankan bot
     bot = OnproverReferralBot(config)
     bot.run()
+    
+# Set the correct paths for your environment
+chrome_binary_path = "/usr/bin/google-chrome"
+chromedriver_path = "/usr/local/bin/chromedriver"
+
+chrome_options = Options()
+chrome_options.binary_location = chrome_binary_path
+chrome_options.add_argument("--headless")  # Remove if you want to see the browser
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
+service = Service(executable_path=chromedriver_path)
+driver = webdriver.Chrome(service=service, options=chrome_options)
