@@ -83,9 +83,6 @@ class OnproverReferralBot:
         
         print("Proses pendaftaran selesai!")
         self.driver.quit()
-        
-if __name__ == "__main__":
-    test_chrome()
 
 if __name__ == "__main__":
     # Load konfigurasi
